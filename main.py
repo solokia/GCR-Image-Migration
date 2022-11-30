@@ -14,7 +14,6 @@ def get_nested_images(image_folders):
             temp += get_nested_images(result)
         else:
             temp.append(image_folders[i])
-    temp
     return temp
 
 def get_list_tags(image):
@@ -36,6 +35,7 @@ def get_list_tags(image):
     return temp
 
 def migrate(fr,to,tag):
+    print(f'gcloud container images add-tag {fr}:{tag} {to}:{tag}')
     res = subprocess.run([f'gcloud container images add-tag {fr}:{tag} {to}:{tag}'],stdout=subprocess.PIPE,shell=True,input='y\n'.encode('utf-8'))
     result = res.stdout.decode('UTF-8').splitlines()
     print(result)
@@ -63,8 +63,9 @@ class GCPImageMigration:
             print(f'starting migrate for {image}')
             tags = get_list_tags(image)
             print(f'tags : {tags}')
-            image_name = image.split('/')[-1]
+            image_name = '/'.join(image.split('/')[2:]) #skip hostname and project
             migrate_image_name = f'{self.migrated_host}/{self.migrated_project}/{image_name}'
+            print(migrate_image_name)
             for tag in tags: 
                 migrate(image,migrate_image_name,tag)
 
